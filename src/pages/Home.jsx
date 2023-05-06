@@ -1,30 +1,36 @@
-import { useEffect, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
+import { useSelector, useDispatch } from 'react-redux'
+import { setCategoryId } from '../redux/slices/filterSlice'
 
 import Categories from '../components/Categories'
 import Sort from '../components/Sort'
 import PizzaBlock from '../components/PizzaBlock'
 import Sceleton from '../components/PizzaBlock/Sceleton'
 import Pagination from '../components/Pagination'
+import { SearchContext } from '../App'
 
-const Home = ({ searchValue }) => {
+const Home = () => {
+  const dispatch = useDispatch()
+  const { categoryId, sort } = useSelector(state => state.filter)
+
+  const { searchValue } = useContext(SearchContext)
   const [items, setItems] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
-  const [categoryID, setCategoryID] = useState(0)
-  const [sort, setSort] = useState({
-    name: 'популярность',
-    sortProperty: 'rating'
-  })
+
   const pizzas = items
     .filter(obj => obj.title.toLowerCase().includes(searchValue.toLowerCase()))
     .map((obj) => <PizzaBlock key={obj.id} {...obj} />)
+  const sceleton = [...new Array(4)].map((_, index) => <Sceleton key={index} />)
 
-  const sceleton = [...new Array(6)].map((_, index) => <Sceleton key={index} />)
+  const onChangeCategory = (id) => {
+    dispatch(setCategoryId(id))
+  }
 
   useEffect(() => {
     setIsLoading(true)
 
-    const category = categoryID ? `category=${categoryID}&` : ''
+    const category = categoryId ? `category=${categoryId}&` : ''
     const sortBy = sort.sortProperty.replace('-', '')
     const order = sort.sortProperty.includes('-') ? 'asc' : 'desc'
     const search = searchValue ? `&search=${searchValue}` : ''
@@ -40,14 +46,14 @@ const Home = ({ searchValue }) => {
         setIsLoading(false)
       })
     window.scrollTo(0, 0)
-  }, [categoryID, sort, searchValue, currentPage])
+  }, [categoryId, sort.sortProperty, searchValue, currentPage])
 
 
   return (
     <div className="container">
       <div className="content__top">
-        <Categories value={categoryID} onChangeCategory={(id) => setCategoryID(id)} />
-        <Sort value={sort} onChangeSort={(id) => setSort(id)} />
+        <Categories value={categoryId} onChangeCategory={onChangeCategory} />
+        <Sort />
       </div>
       <h2 className="content__title">Все пиццы</h2>
       <div className="content__items">
