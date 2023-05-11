@@ -26,13 +26,13 @@ const Home = () => {
 
   const onChangeCategory = useCallback((idx) => {
     dispatch(setCategoryId(idx))
-  }, [])
+  }, [dispatch])
 
   const onChangePage = (page) => {
     dispatch(setCurrentPage(page))
   }
 
-  const fetchPizzas = () => {
+  const fetchPizzas = async () => {
     setIsLoading(true)
 
     const sortBy = sort.sortProperty.replace('-', '')
@@ -62,7 +62,7 @@ const Home = () => {
       navigate(`?${queryString}`)
     }
     isMounted.current = true
-  }, [categoryId, sort.sortProperty, currentPage])
+  }, [categoryId, sort.sortProperty, currentPage, navigate])
 
   // Если был первый рендер, то проверяем URl-параметры и сохраняем в редуксе
   useEffect(() => {
@@ -94,7 +94,7 @@ const Home = () => {
 
   const pizzas = items.map((obj) => <PizzaBlock key={obj.id} {...obj} />)
 
-  const skeletons = [...new Array(6)].map((_, index) => <Skeleton key={index} />)
+  const skeletons = [...new Array(4)].map((_, index) => <Skeleton key={index} />)
 
   return (
     <div className="container">
