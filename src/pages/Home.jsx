@@ -1,9 +1,10 @@
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
-import axios from 'axios'
+import { useNavigate } from 'react-router-dom'
 import qs from 'qs'
+
 import { useSelector, useDispatch } from 'react-redux'
 import { setCategoryId, setCurrentPage, setFilters } from '../redux/slices/filterSlice'
-import { useNavigate } from 'react-router-dom'
+import { fetchPizzas } from '../redux/slices/pizzasSlice'
 
 import Categories from '../components/Categories'
 import Sort, { sortList } from '../components/Sort'
@@ -18,11 +19,10 @@ const Home = () => {
   const isSearch = useRef(false)
   const isMounted = useRef(false)
 
+  const { items, status } = useSelector(state => state.pizzas)
   const { categoryId, sort, currentPage } = useSelector(state => state.filter)
 
   const { searchValue } = useContext(SearchContext)
-  const [items, setItems] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
 
   const onChangeCategory = useCallback((idx) => {
     dispatch(setCategoryId(idx))
@@ -32,22 +32,18 @@ const Home = () => {
     dispatch(setCurrentPage(page))
   }
 
-  const fetchPizzas = async () => {
-    setIsLoading(true)
+  const getPizzas = async () => {
 
     const sortBy = sort.sortProperty.replace('-', '')
     const order = sort.sortProperty.includes('-') ? 'asc' : 'desc'
     const category = categoryId > 0 ? `category=${categoryId}` : ''
     const search = searchValue ? `search=${searchValue}` : ''
 
-    const url = `https://64490aa9b88a78a8f0fb660a.mockapi.io/pizzas/items?page=${currentPage}&limit=4&${category}&sortBy=${sortBy}&order=${order}&${search}`
+    dispatch(fetchPizzas({
+      sortBy, order, category, search, currentPage
+    }))
 
-    axios
-      .get(url)
-      .then((response) => {
-        setItems(response.data)
-        setIsLoading(false)
-      })
+    window.scrollTo(0, 0)
   }
 
   // Если изменили параметры и был первый рендер
@@ -83,10 +79,8 @@ const Home = () => {
 
   // Если был первый рендер, то запрашиваем пиццы
   useEffect(() => {
-    window.scrollTo(0, 0)
-
     if (!isSearch.current) {
-      fetchPizzas()
+      getPizzas()
     }
 
     isSearch.current = false
@@ -103,9 +97,19 @@ const Home = () => {
         <Sort />
       </div>
       <h2 className="content__title">Все пиццы</h2>
-      <div className="content__items">
-        {isLoading ? skeletons : pizzas}
-      </div>
+      {status === 'error'
+        ? (
+          <div className='content__error-info'>
+            <h2>Произошла ошибка 😬</h2>
+            <br />
+            <p>Не удалось получить пиццы. Попробуйте повторить попытку позже.</p>
+          </div>
+        ) : (
+          <div className="content__items">
+            {status === 'pending' ? skeletons : pizzas}
+          </div>
+        )}
+
       <Pagination currentPage={currentPage} onChangePage={onChangePage} />
     </div>
   )
