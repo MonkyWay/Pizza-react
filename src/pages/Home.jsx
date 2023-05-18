@@ -11,7 +11,6 @@ import Sort, { sortList } from '../components/Sort'
 import PizzaBlock from '../components/PizzaBlock'
 import Skeleton from '../components/PizzaBlock/Skeleton'
 import Pagination from '../components/Pagination'
-import { SearchContext } from '../App'
 
 const Home = () => {
   const navigate = useNavigate()
@@ -21,8 +20,8 @@ const Home = () => {
 
   const { items, status } = useSelector(state => state.pizzas)
   const { categoryId, sort, currentPage } = useSelector(state => state.filter)
+  const { searchValue } = useSelector(state => state.filter)
 
-  const { searchValue } = useContext(SearchContext)
 
   const onChangeCategory = useCallback((idx) => {
     dispatch(setCategoryId(idx))
