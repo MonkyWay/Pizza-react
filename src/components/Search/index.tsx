@@ -1,36 +1,36 @@
-import { useCallback, useContext, useMemo, useRef, useState } from 'react'
-import debounce from 'lodash.debounce'
-import { setSearchValue } from '../../redux/slices/filterSlice'
-import { useDispatch } from 'react-redux'
+import { useMemo, useRef, useState } from 'react';
+import debounce from 'lodash.debounce';
+import { setSearchValue } from '../../redux/slices/filterSlice';
+import { useDispatch } from 'react-redux';
 
-import styles from './Search.module.scss'
+import styles from './Search.module.scss';
 
-const Search = () => {
-  const dispatch = useDispatch()
-  const [value, setValue] = useState('')
-  const inputRef = useRef(null)
+const Search: React.FC = () => {
+  const dispatch = useDispatch();
+  const [value, setValue] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const onClickClear = () => {
-    setValue('')
-    dispatch(setSearchValue(''))
-    inputRef.current.focus()
-  }
+    setValue('');
+    dispatch(setSearchValue(''));
+    inputRef.current?.focus();
+  };
 
   const updateSearchValue = useMemo(
     () =>
-      debounce((str) => {
-        dispatch(setSearchValue(str))
+      debounce((str: string) => {
+        dispatch(setSearchValue(str));
       }, 300),
-    [dispatch]
-  )
+    [dispatch],
+  );
 
-  const onChangeInput = (event) => {
-    setValue(event.target.value)
-    updateSearchValue(event.target.value)
-  }
+  const onChangeInput = (event: any) => {
+    setValue(event.target.value);
+    updateSearchValue(event.target.value);
+  };
 
   return (
-    <div className={styles.root} >
+    <div className={styles.root}>
       <svg
         className={styles.icon}
         height="48"
@@ -45,8 +45,9 @@ const Search = () => {
         className={styles.input}
         value={value}
         onChange={onChangeInput}
-        placeholder='Поиск пиццы...'
-        type='text' />
+        placeholder="Поиск пиццы..."
+        type="text"
+      />
 
       {value && (
         <svg
@@ -61,7 +62,7 @@ const Search = () => {
         </svg>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default Search
+export default Search;
