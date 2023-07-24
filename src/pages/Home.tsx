@@ -2,14 +2,19 @@ import { useCallback, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import qs from 'qs';
 
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
+import { useAppDispatch } from '../redux/store';
 import {
   selectFilter,
   setCategoryId,
   setCurrentPage,
   setFilters,
 } from '../redux/slices/filterSlice';
-import { selectPizzaData, fetchPizzas } from '../redux/slices/pizzasSlice';
+import {
+  selectPizzaData,
+  fetchPizzas,
+  SearchPizzaParams,
+} from '../redux/slices/pizzasSlice';
 
 import Categories from '../components/Categories';
 import Sort, { sortList } from '../components/Sort';
@@ -19,7 +24,7 @@ import Pagination from '../components/Pagination';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const isSearch = useRef(false);
   const isMounted = useRef(false);
 
@@ -45,13 +50,12 @@ const Home: React.FC = () => {
     const search = searchValue ? `search=${searchValue}` : '';
 
     dispatch(
-      // @ts-ignore
       fetchPizzas({
         sortBy,
         order,
         category,
         search,
-        currentPage,
+        currentPage: String(currentPage),
       }),
     );
 
@@ -67,9 +71,12 @@ const Home: React.FC = () => {
         currentPage,
       });
 
-      navigate(`?${queryString}`);
+      navigate(`/?${queryString}`);
     }
-    isMounted.current = true;
+
+    if (!window.location.search) {
+      dispatch(fetchPizzas({} as SearchPizzaParams));
+    }
   }, [categoryId, sort.sortProperty, currentPage, navigate]);
 
   // Если был первый рендер, то проверяем URl-параметры и сохраняем в редуксе
@@ -77,16 +84,12 @@ const Home: React.FC = () => {
     if (window.location.search) {
       const params = qs.parse(window.location.search.substring(1));
 
-      const sort = sortList.find(
-        (obj) => obj.sortProperty === params.sortProperty,
-      );
+      const sort = sortList.find((obj) => obj.sortProperty === params.sortBy);
+      if (sort) {
+        params.sort = sort;
+      }
 
-      dispatch(
-        setFilters({
-          ...params,
-          sort,
-        }),
-      );
+      dispatch(setFilters(params));
       isSearch.current = true;
     }
   }, []);
@@ -125,7 +128,7 @@ const Home: React.FC = () => {
         </div>
       ) : (
         <div className="content__items">
-          {status === 'pending' ? skeletons : pizzas}
+          {status === 'loading' ? skeletons : pizzas}
         </div>
       )}
 
